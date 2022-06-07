@@ -1,5 +1,7 @@
 const { Client, DiscordAPIError } = require('discord.js');
 const { token, apikey } = require('./config.json');
+const SQLite = require("better-sqlite3");
+const sql = new SQLite("./scores.sqlite");
 
 const client = new Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
 
@@ -31,9 +33,30 @@ async function get_pokemon(gen){
 
 client.once('ready', () => {
     console.log('Logged in!');
+    const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
+    if (!table['count(*)']) {
+        sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, guild TEXT, points INTEGER, level INTEGER);").run();
+        sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (id);").run();
+        sql.pragma("synchronous = 1");
+        sql.pragma("journal_mode = wal");
+    } 
 });
 
 client.on('messageCreate', async message => {
+    if (message.author.bot) return;
+    let score;
+    if (message.guild) {
+        score = client.getScore.get(message.author.id, message.guild.id);
+        if (!score) {
+            score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 };
+        }
+        const currLevel = Math.floor(0.5 * Math.sqrt(score.points));
+        if (score.level < currLevel) {
+            score.level++;
+            message.reply(`You've reached level **${currLevel}**! Keep it up!`);
+        }
+        client.setScore.run(score);
+    }
     if (message.content.startsWith('!start')) {
         hint = 0;
         if (message.content.includes('gen')) {
@@ -102,6 +125,7 @@ client.on('messageCreate', async message => {
                 let res = await fetch("https://g.tenor.com/v1/search?q=" + pokemon.name + "&key=" + apikey + "&limit=" + 1);
                 let data = await res.json();
                 message.channel.send(data.results[0].media[0].tinygif.url);
+                score.points++;
             } else {
                 message.channel.send("Try again. <:psyduck:965072281711828992>");
             }
