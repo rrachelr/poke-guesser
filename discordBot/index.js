@@ -1,5 +1,5 @@
 const { Client, DiscordAPIError } = require('discord.js');
-const { token, apikey } = require('./config.json');
+const { token, apikey, prefix } = require('./config.json');
 const SQLite = require("better-sqlite3");
 const sql = new SQLite("./scores.sqlite");
 
@@ -57,7 +57,12 @@ client.on('messageCreate', async message => {
         }
         client.setScore.run(score);
     }
-    if (message.content.startsWith('!start')) {
+    if (message.content.indexOf(config.prefix) !== 0) return;
+
+    const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
+    const command = args.shift().toLowerCase();
+
+    if (command === 'start') {
         hint = 0;
         if (message.content.includes('gen')) {
             gen = genList[message.content.charAt(message.content.length - 1) - 1];
@@ -77,11 +82,11 @@ client.on('messageCreate', async message => {
             console.log(err);
         }
     }
-    switch (message.content) {
-        case '!help':
+    switch (command) {
+        case 'help':
             message.channel.send('Commands:\n **!start** *gen(1-8*: start new game, generation can be specified or else gen 1 is chosen automatically\n **!hint**: provides a hint for current roung (up to 4 hints)\n **!guess** *pokemon*: checks if your answer is correct\n **!giveup**: ends round and gives answer');
             break;
-        case '!hint':
+        case 'hint':
             try {
                 switch (hint) {
                     case 0:
@@ -109,7 +114,7 @@ client.on('messageCreate', async message => {
             console.log(err);
         }
         break;
-        case '!giveup':
+        case 'giveup':
             try {
                 message.channel.send("The pokemon was " + pokemon.name + ". To play again, type !start");
             } catch(err) {
@@ -118,7 +123,7 @@ client.on('messageCreate', async message => {
             }
             break;
     }
-    if (message.content.startsWith('!guess')) {
+    if (command === 'guess') {
         try {
             if (message.content.toLowerCase().includes(pokemon.name)) {
                 message.channel.send("Your guess is correct! The Pokemon was " + pokemon.name + "! To play again, use command !start");
@@ -132,6 +137,9 @@ client.on('messageCreate', async message => {
         } catch(err) {
             message.channel.send("Unable to read guess. Have you started a round using !start?");
         }
+    }
+    if (command === 'points') {
+        return message.reply(`You have a total of ${score.points} points and are level ${score.level}!`)
     }
 });
 
