@@ -76,7 +76,7 @@ client.on('messageCreate', async message => {
     }
     switch (message.content) {
         case '!help':
-            message.channel.send('Commands:\n **!start** *gen(1-8*: start new game, generation can be specified or else gen 1 is chosen automatically\n **!hint**: provides a hint for current roung (up to 4 hints)\n **!guess** *pokemon*: checks if your answer is correct\n **!giveup**: ends round and gives answer');
+            message.channel.send('Commands:\n **!start** *gen(1-8*: start new game, generation can be specified or else gen 1 is chosen automatically\n **!hint**: provides a hint for current roung (up to 4 hints)\n **!guess** *pokemon*: checks if your answer is correct\n **!giveup**: ends round and gives answer\n **!points**: displays the user\'s total points and current level');
             break;
         case '!hint':
             try {
