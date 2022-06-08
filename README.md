@@ -5,11 +5,13 @@ PokeGuesser is an exciting new Discord bot complete with a fun guessing game to 
 - Supports all generations (1-8) 
 - Up to four hints each game
 - Unlimited guesses
+- Level system 
 - Simple design, easy to use commands
 
 ## Requirements:
 - [Node.js](https://nodejs.org/en/)
 - [discord.js](https://discord.js.org/#/)
+- [better-sqlite3](https://www.npmjs.com/package/better-sqlite3)
 
 ## Commands:
 - `!help` - provides a list of commands and their descriptions
@@ -17,6 +19,7 @@ PokeGuesser is an exciting new Discord bot complete with a fun guessing game to 
 - `!hint` - reveals a hint (up to four per game) to the player
 - `!guess <pokemon>` - guesses a Pokemon, make sure to include your guess following the ! command
 - `!giveup` - ends the game and reveals the Pokemon
+- `!points` - displays the user's total points and current level
 
 ## Credit:
 - [PokeAPI](https://pokeapi.co/) 
