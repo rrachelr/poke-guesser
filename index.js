@@ -46,6 +46,14 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async message => {
+    if (message.author.bot) return;
+    let score;
+    if (message.guild) {
+        score = client.getScore.get(message.author.id, message.guild.id);
+        if (!score) {
+            score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 }
+        }
+    }
     if (message.content.startsWith('!start')) {
         hint = 0;
         if (message.content.includes('gen')) {
@@ -114,12 +122,22 @@ client.on('messageCreate', async message => {
                 let res = await fetch("https://g.tenor.com/v1/search?q=" + pokemon.name + "&key=" + apikey + "&limit=" + 1);
                 let data = await res.json();
                 message.channel.send(data.results[0].media[0].tinygif.url);
+                score.points++;
+                const curLevel = Math.floor(Math.sqrt(score.points));
+                if (score.level < curLevel) {
+                    score.level++;
+                    message.reply(`You've reached level **${curLevel}**! Keep it up!`);
+                }
+                client.setScore.run(score);
             } else {
                 message.channel.send("Try again. <:psyduck:965072281711828992>");
             }
         } catch(err) {
             message.channel.send("Unable to read guess. Have you started a round using !start?");
         }
+    }
+    if (message.content.startsWith('!points')) {
+        return message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
     }
 });
 
