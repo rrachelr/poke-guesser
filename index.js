@@ -1,5 +1,5 @@
 const { Client, DiscordAPIError } = require('discord.js');
-const { token, apikey } = require('./config.json');
+const { token, apikey, prefix } = require('./config.json');
 const SQLite = require("better-sqlite3");
 const sql = new SQLite("./scores.sqlite");
 
@@ -54,31 +54,12 @@ client.on('messageCreate', async message => {
             score = { id: `${message.guild.id}-${message.author.id}`, user: message.author.id, guild: message.guild.id, points: 0, level: 1 }
         }
     }
-    if (message.content.startsWith('!start')) {
-        hint = 0;
-        if (message.content.includes('gen')) {
-            gen = genList[message.content.charAt(message.content.length - 1) - 1];
-        } else {
-            gen = gen1;
-        }
-        pokemon = await get_pokemon(gen);
-        try {
-            try {
-                message.channel.send("This Pokemon has the types " + pokemon.types[0].type.name + " and " + pokemon.types[1].type.name + ".");
-            } catch(err) {
-                message.channel.send("This Pokemon has the type " + pokemon.types[0].type.name + ".");
-            }
-            message.channel.send("To guess a pokemon, use the command !guess");  
-        } catch(err) {
-            message.channel.send("Unable to start round.")
-            console.log(err);
-        }
-    }
-    switch (message.content) {
-        case '!help':
+
+    switch (command) {
+        case 'help':
             message.channel.send('Commands:\n **!start** *gen(1-8*: start new game, generation can be specified or else gen 1 is chosen automatically\n **!hint**: provides a hint for current roung (up to 4 hints)\n **!guess** *pokemon*: checks if your answer is correct\n **!giveup**: ends round and gives answer\n **!points**: displays the user\'s total points and current level');
             break;
-        case '!hint':
+        case 'hint':
             try {
                 switch (hint) {
                     case 0:
@@ -106,7 +87,7 @@ client.on('messageCreate', async message => {
             console.log(err);
         }
         break;
-        case '!giveup':
+        case 'giveup':
             try {
                 message.channel.send("The pokemon was " + pokemon.name + ". To play again, type !start");
             } catch(err) {
@@ -114,8 +95,30 @@ client.on('messageCreate', async message => {
                 console.log(err);
             }
             break;
+        case 'points':
+            return message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
     }
-    if (message.content.startsWith('!guess')) {
+    if (command === 'start') {
+        hint = 0;
+        if (message.content.includes('gen')) {
+            gen = genList[message.content.charAt(message.content.length - 1) - 1];
+        } else {
+            gen = gen1;
+        }
+        pokemon = await get_pokemon(gen);
+        try {
+            try {
+                message.channel.send("This Pokemon has the types " + pokemon.types[0].type.name + " and " + pokemon.types[1].type.name + ".");
+            } catch(err) {
+                message.channel.send("This Pokemon has the type " + pokemon.types[0].type.name + ".");
+            }
+            message.channel.send("To guess a pokemon, use the command !guess");  
+        } catch(err) {
+            message.channel.send("Unable to start round.")
+            console.log(err);
+        }
+    }
+    if (command === 'guess') {
         try {
             if (message.content.toLowerCase().includes(pokemon.name)) {
                 message.channel.send("Your guess is correct! The Pokemon was " + pokemon.name + "! To play again, use command !start");
@@ -135,9 +138,6 @@ client.on('messageCreate', async message => {
         } catch(err) {
             message.channel.send("Unable to read guess. Have you started a round using !start?");
         }
-    }
-    if (message.content.startsWith('!points')) {
-        return message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
     }
 });
 
